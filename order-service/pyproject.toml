@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "todo-with-kafka"
+version = "0.1.0"
+description = ""
+authors = ["Bilal Raza <success9262@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+fastapi = "^0.111.0"
+uvicorn = {extras = ["standard"], version = "^0.29.0"}
+aiokafka = "^0.10.0"
+sqlmodel = "^0.0.18"
+psycopg = "^3.1.19"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
