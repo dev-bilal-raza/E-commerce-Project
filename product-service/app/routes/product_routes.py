@@ -5,14 +5,6 @@ from app.controllers.product_controller import create_product_func, get_product_
 
 router = APIRouter()
 
-
-@router.post("/create-category/", response_model=Product)
-def create_category(category: Annotated[Product, Depends(create_category_func)]):
-    if not category:
-        raise HTTPException(status_code=500, detail="Some things went wrong, while creating product.")
-    return category
-
-
 @router.post("/create-product/", response_model=Product)
 def create_product(product: Annotated[Product, Depends(create_product_func)]):
     if not product:

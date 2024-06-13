@@ -60,7 +60,6 @@ def get_user(user_id: int, session: DB_SESSION):
     if not user:
         HTTPException(status_code=400, detail="User not found")
     return user
-
     
 def update_user(user_details: UserUpdateModel, session: DB_SESSION):
     user = session.get(User, user_details.user_id) 

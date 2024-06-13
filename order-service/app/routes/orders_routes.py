@@ -11,6 +11,4 @@
 
 # 5) update order status route -> admin
 
-# 6) 
-# 1) create order route
-
+# 6) delete order route -> user/admin

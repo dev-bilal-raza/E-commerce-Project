@@ -1,3 +1,16 @@
+from typing import Annotated
+from fastapi import APIRouter, HTTPException, Depends
+from app.models.product_model import Product
+from app.controllers.product_controller import create_product_fun
+
+router = APIRouter()
+
+
+@router.post("/create-category/", response_model=Product)
+def create_category(category: Annotated[Product, Depends(create_category_func)]):
+    if not category:
+        raise HTTPException(status_code=500, detail="Some things went wrong, while creating product.")
+    return category
 
 # 1) create gender route -> admin
 

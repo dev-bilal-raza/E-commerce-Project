@@ -171,11 +171,11 @@ services:
     restart: always
     container_name: PostgresCont
     environment:
-        - POSTGRES_USER=ziakhan
-        - POSTGRES_PASSWORD=my_password
-        - POSTGRES_DB=mydatabase
+        - POSTGRES_USER=bilal-raza
+        - POSTGRES_PASSWORD=bilalrazapostgres!@#
+        - POSTGRES_DB=ecommerce-database
     ports:
-        - '5433:5432'
+        - '5432:5432'
     volumes:
         - postgres_db:/var/lib/postgresql/data
 #===============================================================================================
