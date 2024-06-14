@@ -77,7 +77,7 @@ async def kong_consumer():
     try:
         async for msg in consumer_kafka:
             print("Listening...")
-            value = bytes(msg.value).decode('utf-8')  # type: ignore
+            value = bytes(msg.value).decode('utf-8')
             create_consumer_in_kong(value.user_name)
             create_jwt_credential_in_kong(value.user_name, value.kid)
             print(msg.value)

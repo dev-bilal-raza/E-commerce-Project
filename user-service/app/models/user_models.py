@@ -35,9 +35,9 @@ class User(UserModel, table=True):
 
 
 class UserUpdateModel(SQLModel):
-    user_id: int
     user_name: str | None
     user_email: str | None
+    address: str | None = Field(max_length=60)
     phone_number: int | None
 
 

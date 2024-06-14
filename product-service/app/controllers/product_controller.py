@@ -91,9 +91,12 @@ def create_product_func(
         # Create a Product instance with the list of ProductItem instances
         product_table = Product(
             product_name=product_details.product_name,
+            description=product_details.product_description,
+            product_type=product_details.product_type,
+            duration=product_details.duration,
+            advance_payment_percentage=product_details.advance_payment_percentage,
             gender_id=product_details.gender_id,
             category_id=product_details.category_id,
-            description=product_details.product_description,
             product_items=product_item_tables
         )
 
@@ -140,7 +143,7 @@ def search_products_func(input: str, session: DB_SESSION):
         products_by_category = session.exec(
             select(Product).where(or_(*category_conditions)))
     else:
-        products_by_category: List = []
+        products_by_category = []
 
     products_by_input = session.exec(select(Product).where(
         (input in Product.product_name) or (
@@ -150,6 +153,7 @@ def search_products_func(input: str, session: DB_SESSION):
     all_products_set = set(products_by_input).union(products_by_category)
     all_products = list(all_products_set)
     return all_products
+
 
 def update_product_func(product_id: int, updated_product: Product, session: DB_SESSION, admin_verification: Annotated[dict, Depends(admin_required)]):
     if not admin_verification:

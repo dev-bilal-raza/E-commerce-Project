@@ -16,7 +16,6 @@ async def get_kafka_producer():
         
 
 #=========================================================================================================================
-
 async def producer(message:Any, topic: str, aio_producer:AIOKafkaProducer = Depends(get_kafka_producer)):
     try:
         result = await aio_producer.send_and_wait(topic , message.encode("utf-8"))

@@ -23,6 +23,8 @@ class OrderModel(OrderBase):
 class Order(OrderBase, table=True):
     order_id: Optional[int] = Field(default=None, primary_key=True)
     total_price: float
+    advance_price: Optional[float]
+    order_type: Literal["Booking", "Ready made"]
     order_status: str = Field(default="pending")
     order_date: datetime = Field(default=datetime.now(timezone.utc))
     items: List["OrderItem"] = Relationship(back_populates="order")
@@ -79,6 +81,9 @@ class Product(SQLModel, table=True):
     # gender_id: int = Field(foreign_key="gender.gender_id")  # Foreign key linking to Gender
     product_name: str  # Name of the product
     product_description: str  # Description of the product
+    product_type: Literal["Ready made", "Booking"]
+    duration: str
+    advance_payment_percentage: float = Field(default=0)
     gender_id: int = Field(foreign_key="gender.gender_id")
     category_id: int = Field(foreign_key="category.category_id")
     product_items: List["ProductItem"] = Relationship(

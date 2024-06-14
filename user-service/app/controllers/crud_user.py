@@ -61,11 +61,13 @@ def get_user(user_id: int, session: DB_SESSION):
         HTTPException(status_code=400, detail="User not found")
     return user
     
-def update_user(user_details: UserUpdateModel, session: DB_SESSION):
-    user = session.get(User, user_details.user_id) 
+def update_user(user_id: int, user_details: UserUpdateModel, session: DB_SESSION):
+    user = session.get(User, user_id) 
     if not user:
         HTTPException(status_code=400, detail="User not found")
-    user = user_details.model_dump(exclude_unset=True)
+    updated_user = user_details.model_dump(exclude_unset=True)
+    for key, value in updated_user.items():
+        setattr(user, key, value)
     session.add(user)
     session.commit()
     session.refresh(user)
