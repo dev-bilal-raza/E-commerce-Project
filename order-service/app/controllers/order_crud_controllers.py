@@ -3,7 +3,7 @@ from typing import List
 from sqlmodel import select
 from fastapi import HTTPException
 from app.models.payment_models import PaymentDetails
-from app.models.order_models import OrderModel, Order, Product
+from app.models.order_models import OrderItem, OrderModel, Order, Product, ProductSize
 from app.controllers.order_components import (
     get_product_and_size, handle_booking_order, handle_ready_made_order, validate_stock, create_order_item, get_user)
 from app.db.db_connector import DB_SESSION
@@ -11,6 +11,7 @@ from app.kafka.kafka_producers import producer
 
 
 # here I have designed all controllers related to creating processes
+# ==============================================================================================================================
 
 
 async def create_order(order_details: OrderModel, payment_model: PaymentDetails, session: DB_SESSION):
@@ -67,7 +68,9 @@ async def create_order(order_details: OrderModel, payment_model: PaymentDetails,
 
 # ==============================================================================================================================
 
+
 # here I have designed all controllers related to reading processes
+# ==============================================================================================================================
 
 
 def read_all_order(session: DB_SESSION):
@@ -122,7 +125,10 @@ def read_specific_type_orders(order_type: str, session: DB_SESSION):
 # ==============================================================================================================================
 
 
-# here I have designed all controllers related to updating processes
+# here I have designed all controllers related to updating
+# ==============================================================================================================================
+
+
 def update_order_status(order_id: int, status: str, session: DB_SESSION):
     order = session.get(Order, order_id)
     if not order:
@@ -134,9 +140,55 @@ def update_order_status(order_id: int, status: str, session: DB_SESSION):
     return order
 
 
+def update_order_quantity(order_item_id: int, quantity: int, session: DB_SESSION):
+    # Fetch the order item from the database
+    order_item = session.get(OrderItem, order_item_id)
+
+    if not order_item:
+        raise HTTPException(status_code=404, detail="Order item not found.")
+
+    # Check if the order item is not part of a Booking order
+    if order_item.order.order_type == "Booking":
+        raise HTTPException(
+            status_code=400, detail="Cannot update quantity for Booking orders.")
+
+    # Ensure the order status allows for updating the quantity
+    if order_item.order.order_status in ["dispatch", "delivered", "arrived"]:
+        raise HTTPException(
+            status_code=400, detail="Order cannot be updated after it has been dispatched, delivered, or arrived."
+        )
+
+    # Update the quantity of the order item
+    order_item.quantity = quantity
+    session.add(order_item)
+    session.commit()
+    session.refresh(order_item)
+
+    # Fetch the order associated with the order item
+    order = session.get(Order, order_item.order_id)
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found.")
+
+    # Calculate the updated total price of the order
+    updated_price = sum(
+        session.get(ProductSize, item.product_size_id).price * item.quantity
+        for item in order.items
+    )
+
+    # Update the total price of the order
+    order.total_price = updated_price
+    session.add(order)
+    session.commit()
+    session.refresh(order)
+
+    return order
+
 # ==============================================================================================================================
 
+
 # here I have designed all controllers related to deleting processes
+# ==============================================================================================================================
+
 
 def delete_order(order_id: int, session: DB_SESSION):
     order = session.exec(select(Order).where(
@@ -144,3 +196,4 @@ def delete_order(order_id: int, session: DB_SESSION):
     session.delete(order)
     session.commit()
     return f"Order has been successfully deleted of this id: {order_id}."
+# ==============================================================================================================================

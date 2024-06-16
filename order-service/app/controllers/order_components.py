@@ -45,7 +45,7 @@ def validate_stock(order_item: OrderItem, product_size: ProductSize):
 
 
 def handle_booking_order(booking_orders: List[OrderItem], total_price: float, advance_price: float, user: User, order_details: OrderModel, payment_model: PaymentDetails, payment_details: dict, session: Session, order_responses: List[dict]):
-    if payment_model.advance_payment and payment_model.advance_payment.advance_payment_intent_id:
+    if payment_model.advance_payment and payment_model.advance_payment.advance_payment_method_id:
         order = Order(user_id=user.user_id,
                       order_address=order_details.order_address,
                       total_price=total_price,
@@ -68,7 +68,7 @@ def handle_booking_order(booking_orders: List[OrderItem], total_price: float, ad
 
 
 def handle_ready_made_order(ready_made_orders: List[OrderItem], total_price: float, user: User, order_details: OrderModel, payment_model: PaymentDetails, payment_details: dict, session: Session, order_responses: List[dict]):
-    if payment_model.payment_method != "Cash on Delivery" and payment_model.payment_intent_id:
+    if payment_model.payment_method != "Cash on Delivery" and payment_model.payment_method_id:
         payment_details.update({"total_price": total_price})
     elif payment_model.payment_method == "Cash on Delivery":
         payment_details.update({"total_price": total_price})

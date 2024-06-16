@@ -33,10 +33,10 @@ class Order(OrderBase, table=True):
 class OrderItem(OrderItemBase, table=True):
     order_item_id: Optional[int] = Field(default=None, primary_key=True)
     order_id: int = Field(foreign_key="order.order_id")
-    product_id: int = Field(foreign_key="product.product_id")
-    product_item_id: int = Field(foreign_key="productitem.item_id")
-    product_size_id: int = Field(foreign_key="productsize.product_size_id")
-    quantity: int = Field(gt=0)
+    # product_id: int = Field(foreign_key="product.product_id")
+    # product_item_id: int = Field(foreign_key="productitem.item_id")
+    # product_size_id: int = Field(foreign_key="productsize.product_size_id")
+    # quantity: int = Field(gt=0)
     order: Optional[Order] = Relationship(back_populates="items")
 
 
