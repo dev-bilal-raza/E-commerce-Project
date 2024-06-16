@@ -2,11 +2,11 @@ from sqlmodel import select
 import stripe
 from fastapi import HTTPException
 
-from app.models.payment_models import AdvancePayment, Payment, PaymentForm
+from app.models.payment_models import AdvancePayment, Payment, PaymentForm, RemainingPaymentModel
 from app.models.order_models import Order
 from app.db.db_connector import DB_SESSION
 from app.controllers.payment_components import (read_payment_details, read_advance_payment,
-                                                handle_ready_made_payment, handle_booking_payment)
+                                                handle_ready_made_payment, handle_booking_payment, handle_remaining_payment)
 
 
 def process_payment(payment_details: PaymentForm, session: DB_SESSION):
@@ -27,6 +27,23 @@ def process_payment(payment_details: PaymentForm, session: DB_SESSION):
             raise HTTPException(status_code=400, detail="Invalid order type.")
     except stripe.StripeError as se:
         raise HTTPException(status_code=500, detail=str(se))
+
+
+def process_outstanding_payment(remaining_amount_details: RemainingPaymentModel, session: DB_SESSION):
+    # get the payment details from user's given information
+    payment_details: Payment = read_payment_details(
+        remaining_amount_details.order_id, session)
+
+    # check previous payment credentials
+    if payment_details.is_completed or payment_details.payment_status == "succeeded":
+        raise HTTPException(
+            status_code=203, detail="You have already pay this amount.")
+
+    # handle remaining payment details and update them
+    updated_payment_details: Payment = handle_remaining_payment(
+        remaining_amount_details, payment_details, session)
+    if updated_payment_details:
+        return updated_payment_details
 
 
 def get_payment_details(order_id: int, session: DB_SESSION):

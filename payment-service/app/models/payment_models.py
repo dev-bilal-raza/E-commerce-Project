@@ -20,6 +20,10 @@ class PaymentModel(PaymentBase):
 class AdvancePaymentModel(AdvancePaymentBase):
     advance_payment_method_id: str
 
+class RemainingPaymentModel(PaymentBase):
+    payment_method_id: str
+    remaining_balance: float
+
 
 class PaymentForm(PaymentModel):
     advance_payment: Optional[AdvancePaymentModel]
@@ -29,7 +33,7 @@ class Payment(PaymentBase, table=True):
     payment_id: int = Field(primary_key=True)
     payment_intent_id: Optional[str]
     payment_status: str
-    outstanding_balance: float = Field(default=0)
+    remaining_balance: float = Field(default=0)
     is_completed: bool = Field(default=False)
     advance_payment: Optional["AdvancePayment"] = Relationship(
         back_populates="payment")
