@@ -86,11 +86,3 @@ curl -i -X POST $KONG_ADMIN_URL/services/notification-service/routes \
     --data "paths[]=/notification-service" \
     --data "strip_path=true"
 
-# Register admin consumer
-curl -i -X POST $KONG_ADMIN_URL/consumers/ \
-    --data "username=admin_bilal"
-
-# Add JWT credentials to the admin consumer and load admin key and secret from env file
-curl -i -X POST $KONG_ADMIN_URL/consumers/admin_bilal/jwt \
-    --data "key=$ADMIN_SECRET_KEY" \
-    # --data "secret=$ADMIN_SECRET"

@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from app.routes.user_routes import user_router
 from app.routes.admin_route import admin_route
-import asyncio 
+import asyncio
 from app.kafka.user_consumers import user_consumer
 from app.db.db_connector import create_db_and_tables
 

@@ -22,12 +22,16 @@ class OrderModel(OrderBase):
 
 class Order(OrderBase, table=True):
     order_id: Optional[int] = Field(default=None, primary_key=True)
+    product_id: int = Field(foreign_key="product.id")
     total_price: float
     advance_price: Optional[float]
     order_type: Literal["Booking", "Ready made"]
     order_status: str = Field(default="pending")
     order_date: datetime = Field(default=datetime.now(timezone.utc))
+    
     items: List["OrderItem"] = Relationship(back_populates="order")
+
+
 
 
 class OrderItem(OrderItemBase, table=True):
