@@ -172,7 +172,7 @@ services:
     container_name: PostgresCont
     environment:
         - POSTGRES_USER=bilal-raza
-        - POSTGRES_PASSWORD=bilalrazapostgres!@#
+        - POSTGRES_PASSWORD=bilalrazapostgres123
         - POSTGRES_DB=ecommerce-database
     ports:
         - '5432:5432'

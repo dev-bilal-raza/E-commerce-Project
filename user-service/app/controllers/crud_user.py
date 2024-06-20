@@ -8,7 +8,9 @@ from app.settings import USER_TOPIC
 from app.kafka.user_producers import producer
 
 # =================================================================================================================================
-async def create_user(user_form: UserModel, session: DB_SESSION):
+
+
+async def create_user_func(user_form: UserModel, session: DB_SESSION):
     """
     Register a new user.
 
@@ -30,39 +32,44 @@ async def create_user(user_form: UserModel, session: DB_SESSION):
     for user in users:
         password_exist = verifyPassword(user_password, user.user_password)
         if user.user_email == user_email and password_exist:
-            raise HTTPException(status_code=404, detail="email and password already exist!")
+            raise HTTPException(
+                status_code=404, detail="email and password already exist!")
         elif user.user_email == user_email:
-            raise HTTPException(status_code=404, detail="This email already exist!")
+            raise HTTPException(
+                status_code=404, detail="This email already exist!")
         elif password_exist:
-            raise HTTPException(status_code=404, detail="This password already exist!")
+            raise HTTPException(
+                status_code=404, detail="This password already exist!")
     await producer(message=user, topic=USER_TOPIC)
 
     user_details = {
-        user_email: user_email,
-        user_password: user_password
+        "user_email": user_email,
+        "user_password": user_password
     }
     # Login the newly registered user and return the data
     token_data = user_login(**user_details.__dict__)
     print("data from login", token_data)
     return token_data
-    
 
-def add_user_in_db(user_form: UserModel, session: DB_SESSION):
+
+def add_user_in_db_func(user_form: UserModel, session: DB_SESSION):
     hashed_password = passwordIntoHash(user_form.user_password)
-    user = User(**user_form.model_dump(), user_password = hashed_password)
+    user = User(**user_form.model_dump(), user_password=hashed_password)
     session.add(user)
     session.commit()
     session.refresh(user)
     return user
-    
-def get_user(user_id: int, session: DB_SESSION):
-    user = session.get(User, user_id) 
+
+
+def get_user_by_id_func(user_id: int, session: DB_SESSION):
+    user = session.get(User, user_id)
     if not user:
         HTTPException(status_code=400, detail="User not found")
     return user
-    
-def update_user(user_id: int, user_details: UserUpdateModel, session: DB_SESSION):
-    user = session.get(User, user_id) 
+
+
+def update_user_func(user_id: int, user_details: UserUpdateModel, session: DB_SESSION):
+    user = session.get(User, user_id)
     if not user:
         HTTPException(status_code=400, detail="User not found")
     updated_user = user_details.model_dump(exclude_unset=True)
@@ -74,5 +81,11 @@ def update_user(user_id: int, user_details: UserUpdateModel, session: DB_SESSION
     return user
 
 
-def delete_user():
-    ...
+def delete_user_func(user_id: int, session: DB_SESSION):
+    user = session.get(User, user_id)
+    if not user:
+        HTTPException(status_code=400, detail="User not found")
+
+    session.delete(user)
+    session.commit()
+    return f"User has been successfully deleted of this id: {user_id}"

@@ -3,7 +3,7 @@ from typing import Annotated
 from aiokafka import AIOKafkaConsumer # type: ignore
 from aiokafka.errors import KafkaConnectionError # type: ignore
 from fastapi import Depends
-from app.controllers.crud_user import add_user_in_db, update_user
+from app.controllers.crud_user import add_user_in_db_func, update_user_func
 from app.controllers.kong_controller import create_consumer_in_kong, create_jwt_credential_in_kong
 from app.settings import KONG_TOPIC, USER_TOPIC
 from app.kafka.user_producers import producer
@@ -45,7 +45,7 @@ async def user_consumer():
     finally:
         await consumer_kafka.stop()
         return user
-    
+
 async def user_update_consumer():
     # consumer_kafka = AIOKafkaConsumer(
     #     "user",

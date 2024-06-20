@@ -1,10 +1,11 @@
 from datetime import datetime, timedelta, timezone
-from passlib.context import CryptContext 
+from passlib.context import CryptContext
 from app.models.user_models import User
 from app.settings import ALGORITHM, SECRET_KEY
 from jose import jwt
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
 
 def generateToken(user: User, expires_delta: timedelta) -> str:
     """
@@ -27,9 +28,10 @@ def generateToken(user: User, expires_delta: timedelta) -> str:
         "exp": expire
     }
     headers = {
+        "iss": user.kid,
         "kid": user.kid
     }
-    
+
     # Encode token with user data and secret key
     token = jwt.encode(payload, SECRET_KEY,
                        algorithm=ALGORITHM, headers=headers)
@@ -73,4 +75,3 @@ def verifyPassword(plainText: str, hashedPassword: str) -> bool:
     print(isPasswordCorrect)
 
     return isPasswordCorrect
-

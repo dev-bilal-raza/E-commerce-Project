@@ -16,7 +16,7 @@ class UserBase(SQLModel):
 
 
 class UserAuth(SQLModel):
-    user_email: EmailStr
+    user_email: str
     user_password: str
 
 # ============================================================================================================================
