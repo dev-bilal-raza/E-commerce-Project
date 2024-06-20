@@ -1,16 +1,17 @@
-from sqlmodel import select
-from app.models.user_models import User, UserModel, UserUpdateModel
+import json
+from sqlmodel import Session, select
+from app.models.user_models import User, UserModel, UserUpdateModel, UserAuth
 from app.db.db_connector import DB_SESSION
 from fastapi import HTTPException
+from app.settings import NOTIFICATION_TOPIC
 from app.utils.auth import passwordIntoHash, verifyPassword
 from app.controllers.auth_user import user_login
-from app.settings import USER_TOPIC
-from app.kafka.user_producers import producer
-
+from app.controllers.kong_controller import kong_func
+from app.utils.kafka_producer import KAFKA_PRODUCER
 # =================================================================================================================================
 
 
-async def create_user_func(user_form: UserModel, session: DB_SESSION):
+async def create_user_func(user_form: UserModel, session: DB_SESSION, producer: KAFKA_PRODUCER):
     """
     Register a new user.
 
@@ -40,24 +41,40 @@ async def create_user_func(user_form: UserModel, session: DB_SESSION):
         elif password_exist:
             raise HTTPException(
                 status_code=404, detail="This password already exist!")
-    await producer(message=user, topic=USER_TOPIC)
-
+    user = add_user_in_db_func(user_form, session)
+    kong_func(user.user_name, user.kid, secret_key=None)
     user_details = {
-        "user_email": user_email,
-        "user_password": user_password
+        "user_email": user_form.user_email,
+        "user_password": user_form.user_password
     }
     # Login the newly registered user and return the data
-    token_data = user_login(**user_details.__dict__)
+    token_data = user_login(user_details=UserAuth(
+        **user_details), session=session)
     print("data from login", token_data)
+
+    message = {
+        "email": user_email,
+        "notification_type": "welcome_user"
+    }
+
+    # TODO: Produce message to notification topic to welcome user through email
+    await producer.send_and_wait(message=json.dumps(message).encode("utf-8"), topic=NOTIFICATION_TOPIC)
     return token_data
 
 
-def add_user_in_db_func(user_form: UserModel, session: DB_SESSION):
-    hashed_password = passwordIntoHash(user_form.user_password)
-    user = User(**user_form.model_dump(), user_password=hashed_password)
-    session.add(user)
-    session.commit()
-    session.refresh(user)
+def add_user_in_db_func(user_form: UserModel, session: Session):
+    try:
+        hashed_password = passwordIntoHash(user_form.user_password)
+        user_form.user_password = hashed_password
+        if not hashed_password:
+            raise HTTPException(
+                status_code=500, detail="Due to some issues, password has not convert into hashed format.")
+        user = User(**user_form.model_dump())
+        session.add(user)
+        session.commit()
+        session.refresh(user)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
     return user
 
 

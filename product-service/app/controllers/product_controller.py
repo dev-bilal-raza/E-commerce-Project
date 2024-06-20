@@ -1,19 +1,19 @@
-from typing import Annotated, List
-from fastapi import Depends, HTTPException, File, UploadFile
+from typing import Annotated, Any, List
+from fastapi import Depends, HTTPException, File, UploadFile, Form
 from sqlmodel import select
 from app.db.db_connector import DB_SESSION
 from app.controllers.category_controller import search_algorithm_func
 from app.models.product_model import Product, ProductItem, ProductFormModel, Stock, ProductSize
-from app.config.auth_admin import admin_required
+from app.utils.auth_admin import admin_required
 import cloudinary  # type:ignore
 import copy
 from sqlalchemy import or_
 
 
 def create_product_func(
-    product_details: ProductFormModel,
     session: DB_SESSION,
     admin_verification: Annotated[dict, Depends(admin_required)],
+    product_details: Any = Form(...),
     images: List[UploadFile] = File(...),
 ):
     """

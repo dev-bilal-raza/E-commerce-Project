@@ -115,6 +115,8 @@ services:
     depends_on:
       - kafka
       - database
+    volumes:
+      - ./user-service:/code 
 #===============================================================================================
   # inventory:
   #   build: 
@@ -234,6 +236,8 @@ secrets:
     file: ./POSTGRES_PASSWORD
 
 volumes:
+  user_data:
+    driver: local
   kong_data: {}
   kong_prefix_vol:
     driver_opts:

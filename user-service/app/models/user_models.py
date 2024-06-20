@@ -1,7 +1,6 @@
 from typing import Optional
 import uuid
 from sqlmodel import SQLModel, Field
-from pydantic import EmailStr
 
 # ============================================================================================================================
 
@@ -29,9 +28,9 @@ class UserModel(UserAuth, UserBase):
 
 
 class User(UserModel, table=True):
-    user_id: Optional[int] = Field(int, primary_key=True)
+    user_id: Optional[int] = Field(primary_key=True)
     is_verified: bool = Field(default=False)
-    kid: str = Field(default=lambda: uuid.uuid4().hex)
+    kid: str = Field(default_factory=lambda: uuid.uuid4().hex)
 
 
 class UserUpdateModel(SQLModel):

@@ -1,8 +1,0 @@
-syntax = "proto3";
-
-message UserDetais {
-    optional string user_name = 1;
-    optional string user_email = 2;
-    optional int32 user_phone_number = 3;
-    optional string user_password = 4
-}

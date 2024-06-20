@@ -13,7 +13,7 @@ def user_login(user_details: UserAuth, session: DB_SESSION):
     db_user = session.exec(statement).one_or_none()
 
     if not db_user:
-        raise HTTPException(status_code=401, detail="Invalid credentials")
+        raise HTTPException(status_code=401, detail=f"User does not exist in Database from email:{user_details.user_email}")
 
     is_password_exist = verifyPassword(
         user_details.user_password, db_user.user_password)

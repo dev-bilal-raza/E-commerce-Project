@@ -1,6 +1,14 @@
 from fastapi import HTTPException
 import requests  # type: ignore
 from app.settings import KONG_ADMIN_URL
+from typing import Optional
+
+def kong_func(user_name: str, kid: str, secret_key: Optional[str] ):
+    try:
+        create_consumer_in_kong(user_name)
+        create_jwt_credential_in_kong(user_name, kid, secret_key)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 def create_consumer_in_kong(user_name: str):
