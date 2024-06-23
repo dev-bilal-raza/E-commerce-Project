@@ -4,7 +4,7 @@ from fastapi import HTTPException
 from app.models.admin_model import AdminLoginForm, Admin, AdminCreateModel
 from app.db.db_connector import DB_SESSION
 from app.controllers.kong_controller import create_consumer_in_kong, create_jwt_credential_in_kong
-from app.settings import ADMIN_EXPIRE_TIME, ADMIN_SECRET_KEY, ALGORITHM
+from app.settings import ADMIN_EXPIRE_TIME, ADMIN_SECRET_KEY, ALGORITHM, SECRET_KEY
 from jose import jwt
 
 
@@ -31,7 +31,7 @@ def admin_verify(admin_form: AdminLoginForm, session: DB_SESSION):
     }
 
 
-def create_admin(admin_form: AdminCreateModel, session: DB_SESSION):
+def create_admin_func(admin_form: AdminCreateModel, session: DB_SESSION):
     if not (admin_form.admin_secret == ADMIN_SECRET_KEY):
         raise HTTPException(status_code=404, detail="")
     admin_exist = session.exec(select(Admin).where(
@@ -49,7 +49,7 @@ def create_admin(admin_form: AdminCreateModel, session: DB_SESSION):
     create_consumer_in_kong(admin.admin_name)
     create_jwt_credential_in_kong(
         admin.admin_name, admin.admin_kid, admin_form.admin_secret)
-    return admin
+    return admin_form
 
 
 def generateToken(admin: Admin, admin_secret: str, expires_delta: timedelta) -> str:
@@ -79,6 +79,6 @@ def generateToken(admin: Admin, admin_secret: str, expires_delta: timedelta) -> 
     }
 
     # Encode token with user data and secret key
-    token = jwt.encode(payload, admin_secret,
+    token = jwt.encode(payload, SECRET_KEY,
                        algorithm=ALGORITHM, headers=headers)
     return token

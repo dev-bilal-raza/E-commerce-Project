@@ -41,11 +41,11 @@ async def create_user_func(user_form: UserModel, session: DB_SESSION, producer: 
         elif password_exist:
             raise HTTPException(
                 status_code=404, detail="This password already exist!")
-    user = add_user_in_db_func(user_form, session)
+    user = await add_user_in_db_func(user_form, session)
     kong_func(user.user_name, user.kid, secret_key=None)
     user_details = {
-        "user_email": user_form.user_email,
-        "user_password": user_form.user_password
+        "user_email": user_email,
+        "user_password": user_password
     }
     # Login the newly registered user and return the data
     token_data = user_login(user_details=UserAuth(
@@ -58,11 +58,11 @@ async def create_user_func(user_form: UserModel, session: DB_SESSION, producer: 
     }
 
     # TODO: Produce message to notification topic to welcome user through email
-    await producer.send_and_wait(message=json.dumps(message).encode("utf-8"), topic=NOTIFICATION_TOPIC)
+    await producer.send_and_wait(value=json.dumps(message).encode("utf-8"), topic=NOTIFICATION_TOPIC)
     return token_data
 
 
-def add_user_in_db_func(user_form: UserModel, session: Session):
+async def add_user_in_db_func(user_form: UserModel, session: Session):
     try:
         hashed_password = passwordIntoHash(user_form.user_password)
         user_form.user_password = hashed_password
@@ -80,7 +80,7 @@ def add_user_in_db_func(user_form: UserModel, session: Session):
 
 def get_user_by_id_func(user_id: int, session: DB_SESSION):
     user = session.get(User, user_id)
-    if not user:
+    if user is None:
         HTTPException(status_code=400, detail="User not found")
     return user
 

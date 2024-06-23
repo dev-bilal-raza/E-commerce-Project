@@ -26,25 +26,13 @@ curl -i -X POST $KONG_ADMIN_URL/services/user-service/routes \
     --data "paths[]=/user-service" \
     --data "strip_path=true"
 
-# Service: inventory-service
-curl -i -X POST $KONG_ADMIN_URL/services/ \
-    --data "name=inventory-service" \
-    --data "url=http://host.docker.internal:8082"
-
-curl -i -X POST $KONG_ADMIN_URL/services/inventory-service/plugins \
-    --data "name=jwt"
-
-curl -i -X POST $KONG_ADMIN_URL/services/inventory-service/routes \
-    --data "paths[]=/inventory-service" \
-    --data "strip_path=true"
-
 # Service: product-service
 curl -i -X POST $KONG_ADMIN_URL/services/ \
     --data "name=product-service" \
-    --data "url=http://host.docker.internal:8083"
+    --data "url=http://host.docker.internal:8082"
 
-curl -i -X POST $KONG_ADMIN_URL/services/product-service/plugins \
-    --data "name=jwt"
+# curl -i -X POST $KONG_ADMIN_URL/services/product-service/plugins \
+#     --data "name=jwt"
 
 curl -i -X POST $KONG_ADMIN_URL/services/product-service/routes \
     --data "paths[]=/product-service" \
@@ -53,7 +41,7 @@ curl -i -X POST $KONG_ADMIN_URL/services/product-service/routes \
 # Service: order-service
 curl -i -X POST $KONG_ADMIN_URL/services/ \
     --data "name=order-service" \
-    --data "url=http://host.docker.internal:8084"
+    --data "url=http://host.docker.internal:8083"
 
 curl -i -X POST $KONG_ADMIN_URL/services/order-service/plugins \
     --data "name=jwt"
@@ -65,7 +53,7 @@ curl -i -X POST $KONG_ADMIN_URL/services/order-service/routes \
 # Service: payment-service
 curl -i -X POST $KONG_ADMIN_URL/services/ \
     --data "name=payment-service" \
-    --data "url=http://host.docker.internal:8085"
+    --data "url=http://host.docker.internal:8084"
 
 curl -i -X POST $KONG_ADMIN_URL/services/payment-service/plugins \
     --data "name=jwt"
@@ -77,7 +65,7 @@ curl -i -X POST $KONG_ADMIN_URL/services/payment-service/routes \
 # Service: notification-service
 curl -i -X POST $KONG_ADMIN_URL/services/ \
     --data "name=notification-service" \
-    --data "url=http://host.docker.internal:8086"
+    --data "url=http://host.docker.internal:8085"
 
 curl -i -X POST $KONG_ADMIN_URL/services/notification-service/plugins \
     --data "name=jwt"
@@ -86,3 +74,14 @@ curl -i -X POST $KONG_ADMIN_URL/services/notification-service/routes \
     --data "paths[]=/notification-service" \
     --data "strip_path=true"
 
+# Service: inventory-service
+curl -i -X POST $KONG_ADMIN_URL/services/ \
+    --data "name=inventory-service" \
+    --data "url=http://host.docker.internal:8086"
+
+curl -i -X POST $KONG_ADMIN_URL/services/inventory-service/plugins \
+    --data "name=jwt"
+
+curl -i -X POST $KONG_ADMIN_URL/services/inventory-service/routes \
+    --data "paths[]=/inventory-service" \
+    --data "strip_path=true"

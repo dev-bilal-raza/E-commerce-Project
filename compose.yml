@@ -118,12 +118,36 @@ services:
     volumes:
       - ./user-service:/code 
 #===============================================================================================
-  # inventory:
+  product:
+    build: 
+      context: ./product-service
+      dockerfile: Dockerfile
+    ports:
+      - 8082:8082
+    depends_on:
+      - kafka
+      - database
+    volumes:
+      - ./product-service:/code 
+#===============================================================================================
+  order:
+    build: 
+      context: ./order-service
+      dockerfile: Dockerfile
+    ports:
+      - 8003:8000
+    depends_on:
+      - kafka
+      - database
+    volumes:
+      - ./order-service:/code 
+#===============================================================================================
+  # payment:
   #   build: 
-  #     context: ./inventory-services
-  #     dockerfile: dockerfile
+  #     context: ./payment-services
+  #     dockerfile: Dockerfile
   #   ports:
-  #     - 8002:8000
+  #     - 8004:8000
   #   depends_on:
   #     - kafka
   #     - database
@@ -131,39 +155,19 @@ services:
   # notification:
   #   build: 
   #     context: ./notification-services
-  #     dockerfile: dockerfile
-  #   ports:
-  #     - 8003:8000
-  #   depends_on:
-  #     - kafka
-  #     - database
-#===============================================================================================
-  # order:
-  #   build: 
-  #     context: ./order-services
-  #     dockerfile: dockerfile
-  #   ports:
-  #     - 8004:8000
-  #   depends_on:
-  #     - kafka
-  #     - database
-#===============================================================================================
-  # payment:
-  #   build: 
-  #     context: ./payment-services
-  #     dockerfile: dockerfile
+  #     dockerfile: Dockerfile
   #   ports:
   #     - 8005:8000
   #   depends_on:
   #     - kafka
   #     - database
 #===============================================================================================
-  # product:
+  # inventory:
   #   build: 
-  #     context: ./product-service
+  #     context: ./inventory-services
   #     dockerfile: Dockerfile
   #   ports:
-  #     - 8082:8082
+  #     - 8006:8000
   #   depends_on:
   #     - kafka
   #     - database

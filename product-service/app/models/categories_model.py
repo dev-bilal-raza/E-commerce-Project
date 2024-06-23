@@ -22,4 +22,4 @@ class Size(SQLModel, table=True):
         size_category (str): Foreign key linking to SizeCategories.
     """
     size_id: Optional[int] = Field(primary_key=True)
-    size: str | int  # Size of the product (e.g., S, M, L)
+    size: str  # Size of the product (e.g., S, M, L)

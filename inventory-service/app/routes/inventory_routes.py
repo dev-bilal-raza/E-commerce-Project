@@ -6,8 +6,7 @@ from app.models.stock_model import Stock
 
 router = APIRouter()
 
-
-@router.post("/inventory_update", response_model=Stock)
+@router.put("/inventory_update", response_model=Stock)
 async def update_inventory(stock_table: Annotated[Stock, Depends(update_product_stock)]):
     if not stock_table:
         HTTPException(
@@ -15,7 +14,7 @@ async def update_inventory(stock_table: Annotated[Stock, Depends(update_product_
     return stock_table
 
 
-@router.put("/get_stock_level", response_model=dict)
+@router.get("/get_stock_level", response_model=dict)
 def get_stock_status(stock_information: Annotated[dict, Depends(get_stock_level)]):
     if not stock_information:
         HTTPException(
@@ -23,7 +22,7 @@ def get_stock_status(stock_information: Annotated[dict, Depends(get_stock_level)
     return stock_information
 
 
-@router.put("/get_specific_product_stock", response_model=dict)
+@router.get("/get_specific_product_stock", response_model=dict)
 def get_stock_st(stock_information: Annotated[dict, Depends(get_specific_product_stock)]):
     if not stock_information:
         HTTPException(
@@ -31,7 +30,7 @@ def get_stock_st(stock_information: Annotated[dict, Depends(get_specific_product
     return stock_information
 
 
-@router.put("/get_all_products_stock", response_model=list[dict])
+@router.get("/get_all_products_stock", response_model=list[dict])
 def get_stock(stock_information: Annotated[list[dict], Depends(get_all_products_stock)]):
     if not stock_information:
         HTTPException(

@@ -29,9 +29,9 @@ def admin_required(token: Annotated[str, Depends(oauth2_scheme)], session: DB_SE
         "admin_name")).where(Admin.admin_email == payload.get("admin_email")).where(Admin.admin_kid == admin_kid)).one_or_none()
     print(admin)
     print(admin_secret)
-
+    
     if not admin:
-        raise HTTPException(status_code=403, detail="Not enough permissions")
-    if not (str(admin_secret) == str(ADMIN_SECRET_KEY)):
+            raise HTTPException(status_code=403, detail="Not enough permissions")
+    if not(str(admin_secret) == str(ADMIN_SECRET_KEY)):
         raise HTTPException(status_code=403, detail="Not enough permissions")
     return payload

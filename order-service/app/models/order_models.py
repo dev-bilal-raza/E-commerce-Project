@@ -22,15 +22,14 @@ class OrderModel(OrderBase):
 
 class Order(OrderBase, table=True):
     order_id: Optional[int] = Field(default=None, primary_key=True)
-    product_id: int = Field(foreign_key="product.id")
+    product_id: int = Field(foreign_key="product.product_id")
     total_price: float
     advance_price: Optional[float]
-    order_type: Literal["Booking", "Ready made"]
+    order_type: str
     order_status: str = Field(default="pending")
     order_date: datetime = Field(default=datetime.now(timezone.utc))
-    
-    items: List["OrderItem"] = Relationship(back_populates="order")
 
+    items: List["OrderItem"] = Relationship(back_populates="order")
 
 
 
@@ -59,9 +58,7 @@ class ProductSize(SQLModel, table=True):
     product_size_id: Optional[int] = Field(None, primary_key=True)
     size_id: int = Field(foreign_key="size.size_id")
     price: int = Field(gt=0)  # Price associated with this size
-    product_item_id: Optional[int] = Field(
-        default=None, foreign_key="productitem.item_id"
-    )
+    product_item_id: int= Field(foreign_key="productitem.item_id")
     # One-to-one relationship with Stock
     stock: "Stock" = Relationship(back_populates="size")
     product_item: Optional["ProductItem"] = Relationship(
@@ -85,7 +82,7 @@ class Product(SQLModel, table=True):
     # gender_id: int = Field(foreign_key="gender.gender_id")  # Foreign key linking to Gender
     product_name: str  # Name of the product
     product_description: str  # Description of the product
-    product_type: Literal["Ready made", "Booking"]
+    product_type: str
     duration: str
     advance_payment_percentage: float = Field(default=0)
     gender_id: int = Field(foreign_key="gender.gender_id")
@@ -109,14 +106,24 @@ class ProductItem(SQLModel, table=True):
     item_id: Optional[int] = Field(
         default=None, primary_key=True)  # Primary key for ProductItem
     # Foreign key linking to Product
-    product_id: Optional[int] = Field(
-        default=None, foreign_key="product.product_id")
+    product_id: int = Field(foreign_key="product.product_id")
     color: str
-    image_url: List[str]  # URL of the product item image
+    # One-to-many relationship with ProductImage
+    product_images: List["ProductImage"] = Relationship(
+        back_populates="product_item")
     # Many-to-one relationship with Product
     product: Optional[Product] = Relationship(back_populates="product_items")
     # One-to-many relationship with ProductSize
     sizes: List[ProductSize] = Relationship(back_populates="product_item")
+
+class ProductImage(SQLModel, table=True):
+    product_image_id: Optional[int] = Field(default=None, primary_key=True)
+    product_item_id: int = Field(foreign_key="productitem.item_id")
+    # URL of the product item image
+    product_image_url: str
+    # Many-to-one relationship with ProductItem
+    product_item: Optional[ProductItem] = Relationship(
+        back_populates="product_images")
 
 
 class Stock(SQLModel, table=True):
@@ -134,9 +141,7 @@ class Stock(SQLModel, table=True):
     """
     stock_id: Optional[int] = Field(
         default=None, primary_key=True)  # Primary key for Stock
-    product_size_id: Optional[int] = Field(
-        # Foreign key linking to ProductSize
-        default=None, foreign_key="productsize.product_size_id")
+    product_size_id: int = Field(foreign_key="productsize.product_size_id")
     stock: int = 0  # Stock level
     product_size: Optional[ProductSize] = Relationship(
         back_populates="stock")  # One-to-one relationship with ProductSize

@@ -8,7 +8,7 @@ from app.utils.auth import generateToken, verifyPassword
 
 # ===============================================================================================================================
 def user_login(user_details: UserAuth, session: DB_SESSION):
-
+    print("User Details from login function: ", user_details)
     statement = select(User).where(User.user_email == user_details.user_email)
     db_user = session.exec(statement).one_or_none()
 

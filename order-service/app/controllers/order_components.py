@@ -1,4 +1,4 @@
-from app.models.order_models import ProductSize, Product, OrderItem, User, OrderModel, Order
+from app.models.order_models import OrderItemBase, ProductSize, Product, OrderItem, User, OrderModel, Order
 from app.models.payment_models import PaymentDetails
 from app.kafka.kafka_producers import producer
 from sqlmodel import Session
@@ -6,7 +6,7 @@ from fastapi import HTTPException
 from typing import List
 
 
-def get_product_and_size(order_item: OrderItem, session: Session):
+def get_product_and_size(order_item: OrderItemBase, session: Session):
     product_size = session.get(ProductSize, order_item.product_size_id)
     product = session.get(Product, order_item.product_id)
     if not product_size:
@@ -28,7 +28,7 @@ def get_user(user_id: int, session: Session) -> User:
         raise HTTPException(status_code=401, detail="User is not verified to create order.")
     return user
 
-def create_order_item(order_item: OrderItem, product: Product) -> OrderItem:
+def create_order_item(order_item: OrderItemBase, product: Product) -> OrderItem:
     # Create an OrderItem instance
     return OrderItem(
         product_id=product.product_id,
@@ -37,14 +37,14 @@ def create_order_item(order_item: OrderItem, product: Product) -> OrderItem:
         quantity=order_item.quantity
     )
 
-def validate_stock(order_item: OrderItem, product_size: ProductSize):
+def validate_stock(order_item: OrderItemBase, product_size: ProductSize):
     if order_item.quantity > product_size.stock.stock:
         raise HTTPException(status_code=400, detail=f"Quantity {
                             order_item.quantity} not available for product id: {product_size.product_size_id}"
                             )
 
 
-def handle_booking_order(booking_orders: List[OrderItem], total_price: float, advance_price: float, user: User, order_details: OrderModel, payment_model: PaymentDetails, payment_details: dict, session: Session, order_responses: List[dict]):
+async def handle_booking_order(booking_orders: List[OrderItem], total_price: float, advance_price: float, user: User, order_details: OrderModel, payment_model: PaymentDetails, payment_details: dict, session: Session, order_responses: List[dict]):
     if payment_model.advance_payment and payment_model.advance_payment.advance_payment_method_id:
         order = Order(user_id=user.user_id,
                       order_address=order_details.order_address,
@@ -61,13 +61,13 @@ def handle_booking_order(booking_orders: List[OrderItem], total_price: float, ad
         })
         order_responses.append({"order_id": order.order_id, "type": "Booking"})
         # Produce message to payment service with payment details
-        producer(message=payment_details, topic="payment_topic")
+        await producer(message=payment_details, topic="payment_topic")
     else:
         raise HTTPException(
             status_code=402, detail="Invalid payment credentials for booking.")
 
 
-def handle_ready_made_order(ready_made_orders: List[OrderItem], total_price: float, user: User, order_details: OrderModel, payment_model: PaymentDetails, payment_details: dict, session: Session, order_responses: List[dict]):
+async def handle_ready_made_order(ready_made_orders: List[OrderItem], total_price: float, user: User, order_details: OrderModel, payment_model: PaymentDetails, payment_details: dict, session: Session, order_responses: List[dict]):
     if payment_model.payment_method != "Cash on Delivery" and payment_model.payment_method_id:
         payment_details.update({"total_price": total_price})
     elif payment_model.payment_method == "Cash on Delivery":
@@ -87,4 +87,4 @@ def handle_ready_made_order(ready_made_orders: List[OrderItem], total_price: flo
         {"order_id": order.order_id, "total_price": total_price})
     order_responses.append({"order_id": order.order_id, "type": "Ready made"})
     # Produce message to payment service with payment details
-    producer(message=payment_details, topic="payment_topic")
+    await producer(message=payment_details, topic="payment_topic")

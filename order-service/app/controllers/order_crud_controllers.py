@@ -14,7 +14,7 @@ from app.kafka.kafka_producers import producer
 # ==============================================================================================================================
 
 
-async def create_order(order_details: OrderModel, payment_model: PaymentDetails, session: DB_SESSION):
+async def create_order_func(order_details: OrderModel, payment_model: PaymentDetails, session: DB_SESSION):
     # Retrieve user from the database
     user = get_user(order_details.user_id, session)
 
@@ -47,13 +47,13 @@ async def create_order(order_details: OrderModel, payment_model: PaymentDetails,
 
     # Handle booking orders
     if len(booking_orders) > 0:
-        handle_booking_order(booking_orders, booking_orders_total_price, booking_orders_advance_price,
-                             user, order_details, payment_model, payment_details, session, order_responses)
+        await handle_booking_order(booking_orders, booking_orders_total_price, booking_orders_advance_price,
+                                   user, order_details, payment_model, payment_details, session, order_responses)
 
     # Handle ready-made orders
     if len(ready_made_orders) > 0:
-        handle_ready_made_order(ready_made_orders, ready_made_orders_total_price, user,
-                                order_details, payment_model, payment_details, session, order_responses)
+        await handle_ready_made_order(ready_made_orders, ready_made_orders_total_price, user,
+                                      order_details, payment_model, payment_details, session, order_responses)
 
     # Check if there are no valid orders
     if not order_responses:
@@ -73,18 +73,18 @@ async def create_order(order_details: OrderModel, payment_model: PaymentDetails,
 # ==============================================================================================================================
 
 
-def read_all_order(session: DB_SESSION):
+def read_all_order_func(session: DB_SESSION):
     orders = session.exec(select(Order)).all()
     return orders
 
 
-def read_orders_by_user(user_id: int, session: DB_SESSION):
+def read_orders_by_user_func(user_id: int, session: DB_SESSION):
     order_by_user = session.exec(
         select(Order).where(Order.user_id == user_id)).all()
     return order_by_user
 
 
-def read_specific_product_orders(product_id: int, session: DB_SESSION):
+def read_specific_product_orders_func(product_id: int, session: DB_SESSION):
     product_orders = []
     orders = session.exec(select(Order)).all()
     for order in orders:
@@ -104,19 +104,19 @@ def read_specific_product_orders(product_id: int, session: DB_SESSION):
     return product_orders
 
 
-def read_specific_status_orders(status: str, session: DB_SESSION):
+def read_specific_status_orders_func(status: str, session: DB_SESSION):
     orders_by_date = session.exec(
         select(Order).where(Order.order_status == status)).all()
     return orders_by_date
 
 
-def read_specific_date_orders(date: datetime, session: DB_SESSION):
+def read_specific_date_orders_func(date: datetime, session: DB_SESSION):
     orders_by_date = session.exec(
         select(Order).where(Order.order_date >= date)).all()
     return orders_by_date
 
 
-def read_specific_type_orders(order_type: str, session: DB_SESSION):
+def read_specific_type_orders_func(order_type: str, session: DB_SESSION):
     orders_by_date = session.exec(
         select(Order).where(Order.order_type == order_type)).all()
     return orders_by_date
@@ -129,7 +129,7 @@ def read_specific_type_orders(order_type: str, session: DB_SESSION):
 # ==============================================================================================================================
 
 
-def update_order_status(order_id: int, status: str, session: DB_SESSION):
+def update_order_status_func(order_id: int, status: str, session: DB_SESSION):
     order = session.get(Order, order_id)
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
@@ -140,11 +140,14 @@ def update_order_status(order_id: int, status: str, session: DB_SESSION):
     return order
 
 
-def update_order_quantity(order_item_id: int, quantity: int, session: DB_SESSION):
+def update_order_quantity_func(order_item_id: int, quantity: int, session: DB_SESSION):
     # Fetch the order item from the database
     order_item = session.get(OrderItem, order_item_id)
 
     if not order_item:
+        raise HTTPException(status_code=404, detail="Order item not found.")
+
+    if not order_item.order:
         raise HTTPException(status_code=404, detail="Order item not found.")
 
     # Check if the order item is not part of a Booking order
@@ -171,7 +174,8 @@ def update_order_quantity(order_item_id: int, quantity: int, session: DB_SESSION
 
     # Calculate the updated total price of the order
     updated_price = sum(
-        session.get(ProductSize, item.product_size_id).price * item.quantity
+        session.exec(select(ProductSize).where(
+            ProductSize.product_size_id == item.product_size_id)).one().price * item.quantity
         for item in order.items
     )
 
@@ -190,7 +194,7 @@ def update_order_quantity(order_item_id: int, quantity: int, session: DB_SESSION
 # ==============================================================================================================================
 
 
-def delete_order(order_id: int, session: DB_SESSION):
+def delete_order_func(order_id: int, session: DB_SESSION):
     order = session.exec(select(Order).where(
         Order.order_id == order_id)).one_or_none()
     session.delete(order)

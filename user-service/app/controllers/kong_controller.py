@@ -23,7 +23,8 @@ def create_jwt_credential_in_kong(user_name: str, kid: str, secret_key: str | No
     if secret_key:
         response = requests.post(
             f"{KONG_ADMIN_URL}/consumers/{user_name}/jwt", data={"key": kid, "secret": secret_key})
-    response = requests.post(
+    else: 
+        response = requests.post(
         f"{KONG_ADMIN_URL}/consumers/{user_name}/jwt", data={"key": kid})
     if response.status_code != 201:
         raise HTTPException(

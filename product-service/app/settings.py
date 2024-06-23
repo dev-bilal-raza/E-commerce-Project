@@ -6,10 +6,12 @@ try:
 except FileNotFoundError:
     config = Config()
 
-DATABASE_URL = config("DATABASE_URL", cast=Secret)
+DATABASE_URL = config("DATABASE_URL")
+
 SECRET_KEY = config.get("SECRET_KEY")
 ADMIN_SECRET_KEY = config.get("ADMIN_SECRET_KEY")
 
-CLOUD_NAME = config.get("CLOUD_NAME")
-CLOUD_KEY = config.get("CLOUD_KEY")
-CLOUD_SECRET = config.get("CLOUD_SECRET")
+AWS_REGION = config.get("AWS_REGION")
+BUCKET_NAME = config.get("BUCKET_NAME")
+AWS_ACCESS_KEY = config.get("AWS_ACCESS_KEY")
+AWS_SECRET_KEY = config.get("AWS_SECRET_KEY")
