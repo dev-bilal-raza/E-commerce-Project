@@ -10,7 +10,7 @@ async def lifespan(app: FastAPI):
     yield
 
 app = FastAPI(
-    title="User Service",
+    title="User and Admin Service",
     description="API for managing users",
     version="1.0.0",
     lifespan=lifespan,
@@ -26,6 +26,6 @@ def home():
 
 
 app.include_router(router=user_routes.router,
-                   prefix="/api/v1/user", tags=["User"])
+                   prefix="/api/v1/user", tags=["Users"])
 app.include_router(router=admin_route.router,
                    prefix="/api/v1/admin", tags=["Admin"])

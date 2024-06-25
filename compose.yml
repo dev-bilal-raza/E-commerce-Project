@@ -11,26 +11,64 @@ x-kong-config:
 
 #===============================================================================================
 services:
-  kong-migrations:
+  db:
+    image: postgres:9.5
+    profiles: [ "database" ]
+    environment:
+      POSTGRES_DB: ${KONG_PG_DATABASE:-kong}
+      POSTGRES_USER: ${KONG_PG_USER:-kong}
+      POSTGRES_PASSWORD_FILE: /run/secrets/kong_postgres_password
+    secrets:
+      - kong_postgres_password
+    healthcheck:
+      test: ["CMD", "pg_isready", "-d", "${KONG_PG_DATABASE:-kong}", "-U", "${KONG_PG_USER:-kong}"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+    restart: on-failure
+    stdin_open: true
+    tty: true
+    volumes:
+      - kong_data:/var/lib/postgresql/data
+#===============================================================================================
+  kong-migrations-bootstrap:
     image: "${KONG_DOCKER_TAG:-kong:latest}"
     command: kong migrations bootstrap
     profiles: [ "database" ]
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     environment:
       <<: *kong-env
+      KONG_PG_PASSWORD_FILE: /run/secrets/kong_postgres_password
     secrets:
       - kong_postgres_password
     restart: on-failure
 #===============================================================================================
   kong-migrations-up:
     image: "${KONG_DOCKER_TAG:-kong:latest}"
-    command: kong migrations up && kong migrations finish
+    command: kong migrations up --vv
     profiles: [ "database" ]
     depends_on:
-      - db
+      kong-migrations-bootstrap:
+        condition: service_completed_successfully
     environment:
       <<: *kong-env
+      KONG_PG_PASSWORD_FILE: /run/secrets/kong_postgres_password
+    secrets:
+      - kong_postgres_password
+    restart: on-failure
+#===============================================================================================
+  kong-migrations-finish:
+    image: "${KONG_DOCKER_TAG:-kong:latest}"
+    command: kong migrations finish --vv
+    profiles: [ "database" ]
+    depends_on:
+      kong-migrations-up:
+        condition: service_completed_successfully
+    environment:
+      <<: *kong-env
+      KONG_PG_PASSWORD_FILE: /run/secrets/kong_postgres_password
     secrets:
       - kong_postgres_password
     restart: on-failure
@@ -77,34 +115,37 @@ services:
       # - ./config:/opt/kong
     security_opt:
       - no-new-privileges
+    depends_on:
+      kong-migrations-finish:
+        condition: service_completed_successfully
 #===============================================================================================
-  db:
-    image: postgres:9.5
-    profiles: [ "database" ]
-    environment:
-      POSTGRES_DB: ${KONG_PG_DATABASE:-kong}
-      POSTGRES_USER: ${KONG_PG_USER:-kong}
-      POSTGRES_PASSWORD_FILE: /run/secrets/kong_postgres_password
-    secrets:
-      - kong_postgres_password
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "pg_isready",
-          "-d",
-          "${KONG_PG_DATABASE:-kong}",
-          "-U",
-          "${KONG_PG_USER:-kong}"
-        ]
-      interval: 30s
-      timeout: 30s
-      retries: 3
-    restart: on-failure
-    stdin_open: true
-    tty: true
-    volumes:
-      - kong_data:/var/lib/postgresql/data
+  # db:
+  #   image: postgres:9.5
+  #   profiles: [ "database" ]
+  #   environment:
+  #     POSTGRES_DB: ${KONG_PG_DATABASE:-kong}
+  #     POSTGRES_USER: ${KONG_PG_USER:-kong}
+  #     POSTGRES_PASSWORD_FILE: /run/secrets/kong_postgres_password
+  #   secrets:
+  #     - kong_postgres_password
+  #   healthcheck:
+  #     test:
+  #       [
+  #         "CMD",
+  #         "pg_isready",
+  #         "-d",
+  #         "${KONG_PG_DATABASE:-kong}",
+  #         "-U",
+  #         "${KONG_PG_USER:-kong}"
+  #       ]
+  #     interval: 30s
+  #     timeout: 30s
+  #     retries: 3
+  #   restart: on-failure
+  #   stdin_open: true
+  #   tty: true
+  #   volumes:
+  #     - kong_data:/var/lib/postgresql/data
 #===============================================================================================
   user:
     build: 
@@ -135,7 +176,7 @@ services:
       context: ./order-service
       dockerfile: Dockerfile
     ports:
-      - 8003:8000
+      - 8083:8083
     depends_on:
       - kafka
       - database
@@ -147,7 +188,7 @@ services:
   #     context: ./payment-services
   #     dockerfile: Dockerfile
   #   ports:
-  #     - 8004:8000
+  #     - 8004:8084
   #   depends_on:
   #     - kafka
   #     - database

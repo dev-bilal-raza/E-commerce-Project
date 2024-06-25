@@ -41,30 +41,12 @@ async def process_messages(consumer_kafka, notification_func_map):
 
 async def user_consumer():
     consumer_kafka = await get_kafka_consumer(USER_TOPIC)
-    notification_func_map = {
-        "welcome_user": user_notification.welcome_notification_func,
-        "user_verification": user_notification.verified_notification_func,
-        "update_user_notification": user_notification.user_update_notification_func,
-    }
-    await process_messages(consumer_kafka, notification_func_map)
+    await process_messages(consumer_kafka, user_notification.user_notification_func_map)
 
 async def order_consumer():
     consumer_kafka = await get_kafka_consumer(ORDER_TOPIC)
-    notification_func_map = {
-        "order_create_notification": order_notification.order_create_notification_func,
-        "order_on_ship_notification": order_notification.order_on_ship_notification_func,
-        "order_on_way_notification": order_notification.order_on_way_notification_func,
-        "order_cancelled_notification": order_notification.order_cancelled_notification_func,
-        "back_order_notification": order_notification.back_order_notification_func,
-        "order_arrive_notification": order_notification.order_arrive_notification_func,
-    }
-    await process_messages(consumer_kafka, notification_func_map)
+    await process_messages(consumer_kafka, order_notification.order_notification_func_map)
 
 async def payment_consumer():
     consumer_kafka = await get_kafka_consumer(PAYMENT_TOPIC)
-    notification_func_map = {
-        "payment_received_notification": payment_notification.payment_received_notification_func,
-        "payment_success_notification": payment_notification.payment_success_notification_func,
-        "payment_failed_notification": payment_notification.payment_failed_notification_func,
-    }
-    await process_messages(consumer_kafka, notification_func_map)
+    await process_messages(consumer_kafka, payment_notification.payment_notification_func_map)

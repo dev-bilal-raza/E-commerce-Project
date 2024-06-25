@@ -5,7 +5,6 @@ import stripe
 from app.models.order_models import Order
 from app.models.payment_models import Payment, AdvancePayment, PaymentForm, RemainingPaymentModel
 from app.settings import STRIPE_SECRET_KEY
-from app.controllers.payment_controllers import update_payment, read_payment_details
 
 stripe.api_key = STRIPE_SECRET_KEY
 

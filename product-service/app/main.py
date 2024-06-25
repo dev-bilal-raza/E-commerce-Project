@@ -8,7 +8,7 @@ async def lifespan(app: FastAPI):
     yield
 
 app = FastAPI(
-    title="Product Service",
+    title="Product and Category Service",
     description="API for managing products",
     version="1.0.0",
     lifespan=lifespan,
@@ -24,6 +24,6 @@ def home():
 
 
 app.include_router(router=product_routes.router,
-                   prefix="/api/v1/product", tags=["Product"])
+                   prefix="/api/v1/product", tags=["Products"])
 app.include_router(router=category_and_gender_routes.router,
                    prefix="/api/v1/product", tags=["Category"])

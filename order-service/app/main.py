@@ -23,9 +23,9 @@ app = FastAPI(
 
 
 @app.get("/")
-def home_order():
+def home():
     return "Welcome to Order Service"
 
 
-app.include_router(router=orders_routes.router, tags=["/api/v1/orders"])
-app.include_router(router=cart_routes.router, tags=["/api/v1/cart"])
+app.include_router(router=orders_routes.router, prefix="/api/v1/orders", tags=["Orders"])
+app.include_router(router=cart_routes.router, prefix="/api/v1/cart", tags=["Carts"])

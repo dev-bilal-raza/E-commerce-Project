@@ -22,7 +22,6 @@ class OrderModel(OrderBase):
 
 class Order(OrderBase, table=True):
     order_id: Optional[int] = Field(default=None, primary_key=True)
-    product_id: int = Field(foreign_key="product.product_id")
     total_price: float
     advance_price: Optional[float]
     order_type: str
@@ -60,7 +59,7 @@ class ProductSize(SQLModel, table=True):
     price: int = Field(gt=0)  # Price associated with this size
     product_item_id: int= Field(foreign_key="productitem.item_id")
     # One-to-one relationship with Stock
-    stock: "Stock" = Relationship(back_populates="size")
+    stock: "Stock" = Relationship(back_populates="product_size")
     product_item: Optional["ProductItem"] = Relationship(
         back_populates="sizes"
     )  # Many-to-one relationship with ProductItem

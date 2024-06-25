@@ -1,6 +1,7 @@
+import json
 from app.models.order_models import OrderItemBase, ProductSize, Product, OrderItem, User, OrderModel, Order
 from app.models.payment_models import PaymentDetails
-from app.kafka.kafka_producers import producer
+from app.kafka.kafka_producers import KAFKA_PRODUCER
 from sqlmodel import Session
 from fastapi import HTTPException
 from typing import List
@@ -29,6 +30,7 @@ def get_user(user_id: int, session: Session) -> User:
     return user
 
 def create_order_item(order_item: OrderItemBase, product: Product) -> OrderItem:
+    print(f"Product from create order function: {product}")
     # Create an OrderItem instance
     return OrderItem(
         product_id=product.product_id,
@@ -44,9 +46,10 @@ def validate_stock(order_item: OrderItemBase, product_size: ProductSize):
                             )
 
 
-async def handle_booking_order(booking_orders: List[OrderItem], total_price: float, advance_price: float, user: User, order_details: OrderModel, payment_model: PaymentDetails, payment_details: dict, session: Session, order_responses: List[dict]):
+async def handle_booking_order(booking_orders: List[OrderItem], total_price: float, advance_price: float, user: User, order_details: OrderModel, payment_model: PaymentDetails, payment_details: dict, session: Session, order_responses: List[dict], producer: KAFKA_PRODUCER):
     if payment_model.advance_payment and payment_model.advance_payment.advance_payment_method_id:
         order = Order(user_id=user.user_id,
+                      order_type="Booking",
                       order_address=order_details.order_address,
                       total_price=total_price,
                       advance_price=advance_price,
@@ -61,22 +64,23 @@ async def handle_booking_order(booking_orders: List[OrderItem], total_price: flo
         })
         order_responses.append({"order_id": order.order_id, "type": "Booking"})
         # Produce message to payment service with payment details
-        await producer(message=payment_details, topic="payment_topic")
+        await producer.send_and_wait(value=json.dumps(payment_details).encode("utf-8"), topic="payment_topic")
     else:
         raise HTTPException(
             status_code=402, detail="Invalid payment credentials for booking.")
 
 
-async def handle_ready_made_order(ready_made_orders: List[OrderItem], total_price: float, user: User, order_details: OrderModel, payment_model: PaymentDetails, payment_details: dict, session: Session, order_responses: List[dict]):
-    if payment_model.payment_method != "Cash on Delivery" and payment_model.payment_method_id:
+async def handle_ready_made_order(ready_made_orders: List[OrderItem], total_price: float, user: User, order_details: OrderModel, payment_model: PaymentDetails, payment_details: dict, session: Session, order_responses: List[dict], producer: KAFKA_PRODUCER):
+    if payment_model.payment_method.lower() != "cash on delivery" and payment_model.payment_method_id:
         payment_details.update({"total_price": total_price})
-    elif payment_model.payment_method == "Cash on Delivery":
+    elif payment_model.payment_method.lower() == "cash on delivery":
         payment_details.update({"total_price": total_price})
     else:
         raise HTTPException(
             status_code=402, detail="Invalid payment credentials for ready made product.")
 
     order = Order(user_id=user.user_id,
+                  order_type="Ready made",
                   order_address=order_details.order_address,
                   total_price=total_price,
                   items=ready_made_orders)
@@ -87,4 +91,4 @@ async def handle_ready_made_order(ready_made_orders: List[OrderItem], total_pric
         {"order_id": order.order_id, "total_price": total_price})
     order_responses.append({"order_id": order.order_id, "type": "Ready made"})
     # Produce message to payment service with payment details
-    await producer(message=payment_details, topic="payment_topic")
+    await producer.send_and_wait(value=json.dumps(payment_details).encode("utf-8"), topic="payment_topic")

@@ -1,4 +1,8 @@
+from typing import Callable
+from fastapi import HTTPException
+
 from app.utils.boto_config import send_email_via_boto
+from app.models.email_template import EmailModel
 
 
 def send_custom_notification_func(user_email: str, subject: str, message: str):
@@ -40,5 +44,18 @@ def send_custom_notification_func(user_email: str, subject: str, message: str):
     </body>
     </html>
     """
-    response = send_email_via_boto(user_email, subject, custom_notification_schema)
+    response = send_email_via_boto(
+        user_email, subject, custom_notification_schema)
     return response
+
+
+def send_notification_via_template_func(email_details: EmailModel, notification_func_map: dict[str, Callable]):
+    if email_details.email and email_details.notification_type:
+        notification_func = notification_func_map.get(
+            email_details.notification_type)
+        if notification_func:
+            notification_func(email_details.email)
+        else:
+            raise HTTPException(status_code=404, detail="You have not provide correct notification type.")
+    else:
+        raise HTTPException(status_code=404, detail="Credentials are not available.")

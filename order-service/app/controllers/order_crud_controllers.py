@@ -1,4 +1,5 @@
 from datetime import datetime
+import json
 from typing import List
 from sqlmodel import select
 from fastapi import HTTPException
@@ -7,14 +8,14 @@ from app.models.order_models import OrderItem, OrderModel, Order, Product, Produ
 from app.controllers.order_components import (
     get_product_and_size, handle_booking_order, handle_ready_made_order, validate_stock, create_order_item, get_user)
 from app.db.db_connector import DB_SESSION
-from app.kafka.kafka_producers import producer
+from app.kafka.kafka_producers import KAFKA_PRODUCER
 
 
 # here I have designed all controllers related to creating processes
 # ==============================================================================================================================
 
 
-async def create_order_func(order_details: OrderModel, payment_model: PaymentDetails, session: DB_SESSION):
+async def create_order_func(order_details: OrderModel, payment_model: PaymentDetails, session: DB_SESSION, producer: KAFKA_PRODUCER):
     # Retrieve user from the database
     user = get_user(order_details.user_id, session)
 
@@ -44,24 +45,26 @@ async def create_order_func(order_details: OrderModel, payment_model: PaymentDet
             item = create_order_item(order_item, product)
             ready_made_orders_total_price += product_size.price * order_item.quantity
             ready_made_orders.append(item)
-
     # Handle booking orders
     if len(booking_orders) > 0:
+        print(f"Booking Orders: {booking_orders}")
         await handle_booking_order(booking_orders, booking_orders_total_price, booking_orders_advance_price,
-                                   user, order_details, payment_model, payment_details, session, order_responses)
+                                   user, order_details, payment_model, payment_details, session, order_responses, producer)
 
     # Handle ready-made orders
     if len(ready_made_orders) > 0:
+        print(f"Ready made Orders:{ready_made_orders}")
         await handle_ready_made_order(ready_made_orders, ready_made_orders_total_price, user,
-                                      order_details, payment_model, payment_details, session, order_responses)
+                                      order_details, payment_model, payment_details, session, order_responses, producer)
 
     # Check if there are no valid orders
     if not order_responses:
+        print(f"Order Response: {order_responses}")
         raise HTTPException(
             status_code=400, detail="No valid order items found.")
 
     # Produce message to Notification service to notify user about creating order
-    await producer(message={"order_responses": order_responses}, topic="notification_topic")
+    await producer.send_and_wait(value=json.dumps({"order_responses": order_responses}).encode("utf-8"), topic="notification_topic")
 
     return "Your order has been successfully created."
 

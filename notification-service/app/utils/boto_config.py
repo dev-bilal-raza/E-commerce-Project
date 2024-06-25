@@ -12,6 +12,16 @@ client = boto3.client(
 )
 
 
+def verify_email_func(email_address: str):
+    response = client.verify_email_address(
+        EmailAddress=[email_address]
+    )
+    return {
+        "message": "Verification Email sent!",
+        "response": response
+    }
+
+
 def send_email_via_boto(user_email: str, subject: str, body: str):
     recipient = user_email.lower().strip()
     charset = 'UTF-8'
